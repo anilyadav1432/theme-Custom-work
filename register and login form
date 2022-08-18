@@ -1,0 +1,229 @@
+* creating a shortcode for add registraion form 
+*/
+add_shortcode( 'registration_form', 'ced_register_short_callback_function' );
+function ced_register_short_callback_function(){
+	return'
+	<table style="margin:0px auto;width:800px;">
+	  <tr>
+		<th><label for="firstname"><b>First Name</b></label></th>
+		<td><input type="text" placeholder="Enter First Name" name="firstname" id="firstname" required><span id="fnamemsg" style="color:red;"></span></td>
+	  </tr>
+	  <tr>
+		<th><label for="lastname"><b>Last Name</b></label></th>
+		<td><input type="text" placeholder="Enter Last Name" name="lastname" id="lastname" required><span id="lnamemsg" style="color:red;"></span></td>
+	  </tr>
+	  <tr>
+		<th><label for="email"><b>Email</b></label></th>
+		<td><input type="email" placeholder="Enter Email" name="email" id="email" required><span id="emailmsg" style="color:red;"></span></td>
+	  </tr>
+	  <tr>
+		<th><label for="password"><b>Password</b></label></th>
+		<td><input type="password" placeholder="Enter Password" name="password" id="password" required><span id="passmsg" style="color:red;"></span><td>
+	  </tr>
+	  <tr>
+	  	<td colspan="2"><button type="submit" id="registerbtn">Register</button></td>
+	  </tr>
+	</table>
+  ';
+}
+
+
+add_action('wp_footer', 'ced_wp_footer');  //for write js we required 'wp_header' or 'wp_footer' hook in theme
+function ced_wp_footer(){
+?>
+<script>
+		jQuery(document).on('click','#registerbtn',function(){
+			var firstname = jQuery('#firstname').val();
+			var lastname = jQuery('#lastname').val();
+			var email = jQuery('#email').val();
+			var password = jQuery('#password').val();
+			var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+			if(firstname == ""){
+				jQuery("#fnamemsg").html("please enter your first name");
+				return false;
+			}else{
+				jQuery("#fnamemsg").html("");
+			}
+			if(lastname == ""){
+				jQuery("#lnamemsg").html("please enter your last name");
+				return false;
+			}else{
+				jQuery("#lnamemsg").html("");
+			}
+			// for email Checking
+            if(email=="")
+            {
+                jQuery('#emailmsg').html("Please enter Your email");
+                return false;
+            }
+            else if(email!="")
+            {
+                var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+                if(email.match(mailformat))
+                {
+                    jQuery('#emailmsg').html("");
+                }
+                else
+                {
+                    jQuery('#emailmsg').html("Please enter Valid email");
+                    return false;
+                }
+            }
+			if(password == ""){
+				jQuery("#passmsg").html("please enter your password");
+				return false;
+			}else{
+				jQuery("#passmsg").html("");
+			}
+			jQuery.ajax({
+				type: "POST",
+				url:  "<?php echo admin_url('admin-ajax.php'); ?>",
+				data: 
+					{
+						'action': 'ced_save_registration_data',
+						firstname : firstname,
+						lastname:lastname,
+						email:email,
+						password:password
+					},
+					success: function(response){
+						alert(response);
+						// window.location.reload(true);
+					}
+            });
+
+		});
+</script>
+
+<?php
+}
+add_action('wp_ajax_ced_save_registration_data', 'ced_save_registration_data'); //its work If Login
+add_action('wp_ajax_nopriv_ced_save_registration_data', 'ced_save_registration_data'); //its work if not login
+
+function ced_save_registration_data(){
+	// print_r($_POST);
+	$firstname = isset($_POST['firstname'])?$_POST['firstname']:'';
+	$lastname = isset($_POST['lastname'])?$_POST['lastname']:'';
+	$email = isset($_POST['email'])?$_POST['email']:'';
+	$password = isset($_POST['password'])?$_POST['password']:'';
+	
+	$user_data = array(
+        'user_login' => $firstname,
+        'user_pass'  => $password,
+        'user_email' => $email,
+        'role'       => 'customer',
+        'first_name' => $firstname,
+        'last_name'  => $lastname,
+    );
+
+    $user_id  = wp_insert_user( $user_data );
+	// echo $user_id;
+	die();
+}
+
+
+//***************** creating a login form in bellow  *******************
+
+add_shortcode( 'login_form', 'ced_login_short_callback_function' );
+function ced_login_short_callback_function(){
+	return'
+	<table style="margin:0px auto;width:800px;">
+	  <tr>
+		<th><label for="email"><b>Email</b></label></th>
+		<td><input type="email" placeholder="Enter Email" name="email" id="email" required><span id="emailmsg" style="color:red;"></span></td>
+	  </tr>
+	  <tr>
+		<th><label for="password"><b>Password</b></label></th>
+		<td><input type="password" placeholder="Enter Password" name="password" id="password" required><span id="passmsg" style="color:red;"></span><td>
+	  </tr>
+	  <tr>
+	  	<td colspan="2"><button type="submit" id="loginbtn">Login</button></td>
+	  </tr>
+	</table>
+  ';
+}
+
+
+add_action('wp_footer', 'ced_wp_log_footer');  //for write js we required 'wp_header' or 'wp_footer' hook in theme
+function ced_wp_log_footer(){
+?>
+<script>
+		jQuery(document).on('click','#loginbtn',function(){
+			var email = jQuery('#email').val();
+			var password = jQuery('#password').val();
+            if(email=="")
+            {
+                jQuery('#emailmsg').html("Please enter Your email");
+                return false;
+            }
+            else if(email!="")
+            {
+                var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+                if(email.match(mailformat))
+                {
+                    jQuery('#emailmsg').html("");
+                }
+                else
+                {
+                    jQuery('#emailmsg').html("Please enter Valid email");
+                    return false;
+                }
+            }
+			if(password == ""){
+				jQuery("#passmsg").html("please enter your password");
+				return false;
+			}else{
+				jQuery("#passmsg").html("");
+			}
+			jQuery.ajax({
+				type: "POST",
+				url:  "<?php echo admin_url('admin-ajax.php'); ?>",
+				data: 
+					{
+						'action': 'ced_user_login_data',
+						email:email,
+						password:password
+					},
+					success: function(response){
+						// alert(response);
+						document.location.href = response;
+						// window.location.replace(response);
+						// window.location.reload(true);
+					}
+            });
+
+		});
+</script>
+<?php
+}
+add_action('wp_ajax_ced_user_login_data', 'ced_user_login_data'); 
+add_action('wp_ajax_nopriv_ced_user_login_data', 'ced_user_login_data'); //its work if not login
+
+function ced_user_login_data(){
+	// print_r($_POST);
+	$email = isset($_POST['email'])?$_POST['email']:'';
+	$password = isset($_POST['password'])?$_POST['password']:'';
+	$user = get_user_by('email', $email);
+	wp_clear_auth_cookie();
+	wp_set_current_user($user->data->ID);
+	wp_set_auth_cookie($user->data->ID);
+
+	// $redirect_to = home_url();
+	// wp_safe_redirect( $redirect_to );
+	if ( in_array( 'administrator', $user->roles ) || in_array( 'editor', $user->roles ) || in_array( 'author', $user->roles ) ) {
+		// Admins, editors and authors are redirected to the WordPress dashboard
+		$redirect_to = admin_url();
+	echo $redirect_to;
+	} else if ( in_array( 'customer', $user->roles ) || in_array( 'shop_manager', $user->roles ) ) {
+		// Customers and shop managers are redirected to the Shop page
+		$redirect_to = home_url( '/my-account' );
+		echo $redirect_to;
+	} else {
+		// Everybody else is redirected to the homepage
+		$redirect_to = home_url();
+		echo $redirect_to;
+	}
+	exit();
+	
+}
+

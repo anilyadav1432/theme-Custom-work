@@ -1,0 +1,57 @@
+
+/**
+ * @snippet       Add DOB Field @ WooCommerce Checkout Page
+ * @author        cedcoss
+ * version		  1.0.0
+ * 
+ */
+  
+add_action( 'woocommerce_before_order_notes', 'ced_add_custom_checkout_field' );
+  
+function ced_add_custom_checkout_field( $checkout ) { 
+   $current_user = wp_get_current_user();
+   $saved_dob_date = $current_user->dob_date;
+   woocommerce_form_field( 'dob_date', array(        
+      'type' => 'date',        
+      'class' => array( 'form-row-wide' ),        
+      'label' => 'DOB',        
+      'placeholder' => '',        
+      'required' => true,        
+      'default' => $saved_dob_date,        
+   ), $checkout->get_value( 'dob_date' ) ); 
+}
+
+add_action( 'woocommerce_checkout_process', 'ced_validate_new_checkout_field' );
+  
+function ced_validate_new_checkout_field() {    
+   if ( ! $_POST['dob_date'] ) {
+      wc_add_notice( 'Please enter your DOB', 'error' );
+   }
+}
+
+
+/**
+ * updating post meta field / save field
+ */
+  
+add_action( 'woocommerce_checkout_update_order_meta', 'ced_save_new_checkout_field' );
+  
+function ced_save_new_checkout_field( $order_id ) { 
+    if ( $_POST['dob_date'] ) update_post_meta( $order_id, '_dob_date', esc_attr( $_POST['dob_date'] ) );
+}
+  
+/**
+ * Show Data on orders page
+ */
+add_action( 'woocommerce_admin_order_data_after_billing_address', 'ced_show_new_checkout_field_order', 10, 1 );
+   
+function ced_show_new_checkout_field_order( $order ) {    
+   $order_id = $order->get_id();
+   if ( get_post_meta( $order_id, '_dob_date', true ) ) echo '<p><strong>DOB Date:</strong> ' . get_post_meta( $order_id, '_dob_date', true ) . '</p>';
+}
+ 
+add_action( 'woocommerce_email_after_order_table', 'ced_show_new_checkout_field_emails', 20, 4 );
+  
+function ced_show_new_checkout_field_emails( $order, $sent_to_admin, $plain_text, $email ) {
+    if ( get_post_meta( $order->get_id(), '_dob_date', true ) ) echo '<p><strong>DOB Date:</strong> ' . get_post_meta( $order->get_id(), '_dob_date', true ) . '</p>';
+}
